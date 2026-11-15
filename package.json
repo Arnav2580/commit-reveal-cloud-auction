@@ -1,0 +1,27 @@
+{
+  "name": "commit-reveal-cloud-auction-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Front-running-resistant cloud resource auction demo",
+  "scripts": {
+    "compile": "hardhat compile && node scripts/export-abi.js",
+    "test": "hardhat test",
+    "node": "hardhat node",
+    "deploy": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "app": "node scripts/serve.js",
+    "classroom": "node scripts/classroom.js",
+    "demo": "hardhat run scripts/demo.js",
+    "benchmark": "hardhat run scripts/benchmark.js",
+    "commit": "hardhat run scripts/commit.js --network localhost",
+    "start-reveal": "hardhat run scripts/startReveal.js --network localhost",
+    "reveal": "hardhat run scripts/reveal.js --network localhost",
+    "finalize": "hardhat run scripts/finalize.js --network localhost"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.1.2",
+    "@nomicfoundation/hardhat-ethers": "^3.1.0",
+    "chai": "^4.5.0",
+    "hardhat": "^2.29.1"
+  }
+}

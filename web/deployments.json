@@ -1,0 +1,13 @@
+{
+  "localhost": {
+    "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "chainId": 31337,
+    "network": "localhost",
+    "resourceId": "1",
+    "description": "VM-001 | 4 CPU | 16 GB RAM | 100 GB storage | 2 hours",
+    "maxBid": "100",
+    "commitDuration": 300,
+    "revealDuration": 300,
+    "deployedAt": "2026-11-15T07:01:37.654Z"
+  }
+}

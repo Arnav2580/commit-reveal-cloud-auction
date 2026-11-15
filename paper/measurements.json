@@ -1,0 +1,13 @@
+{
+  "generatedAt": "2026-11-15T05:10:03.074Z",
+  "chain": "Hardhat local in-process network",
+  "bidders": 10,
+  "units": "gas",
+  "gasUsed": {
+    "deploy": "907817",
+    "commit": "97193",
+    "reveal": "57272",
+    "finalize": "170544"
+  },
+  "note": "Execution gas used is a local EVM measurement; it is not a Sepolia latency or production scalability benchmark."
+}

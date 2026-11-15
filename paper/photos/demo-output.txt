@@ -1,0 +1,27 @@
+
+> commit-reveal-cloud-auction-demo@1.0.0 demo
+> hardhat run scripts/demo.js
+
+
+--- Open-bid baseline: visible bids can be immediately beaten ---
+Bidder A openly bids 5 ETH-equivalent price units.
+Attacker observes it and bids 6. Baseline winner: 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65
+
+--- Ordering-safe commit-reveal auction ---
+Bidder A commits 0xd8ebcb69445d5caa500ca88ee9246d84837c1b7f3a9acd55d5cb3fb860f82738 (using a fresh private 32-byte nonce).
+Bidder B commits 0xdb31baa6df8d5b1e7e0b32f0748799c23565c411b20a29a0651917a7b2b18472 (using a fresh private 32-byte nonce).
+Bidder C commits 0x47af053bd7eed2dad89d4c46a47c16f69dd6525b8b2edebfd6deeefb54320ead (using a fresh private 32-byte nonce).
+The chain has commitments, not bid values, during the commit phase.
+Bidder A reveals 5.0.
+Bidder B reveals 8.0.
+Bidder C reveals 6.0.
+Before finalization: {
+  highestBid: '0',
+  winner: '0x0000000000000000000000000000000000000000'
+}
+After finalization: {
+  winner: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC',
+  winningBid: '8.0',
+  resource: 'VM-001 | 4 CPU | 16 GB RAM | 100 GB storage | 2 hours',
+  allocated: true
+}
