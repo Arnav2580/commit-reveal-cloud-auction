@@ -81,6 +81,14 @@
 
         <article class="bid-card" id="bidCard">
           <div class="card-heading"><div><div class="section-kicker">YOUR PARTICIPATION</div><h2 id="bidHeading">Place a sealed bid</h2><p id="bidSubheading">Set your maximum value. No one can see it during the commit phase.</p></div><div class="step-count"><span id="stepNumber">01</span><span>/ 02</span></div></div>
+          <section id="participantFields" class="participant-fields" aria-labelledby="participantHeading">
+            <div class="participant-fields-heading"><strong id="participantHeading">First, identify your classroom entry</strong><span>Required before bidding</span></div>
+            <div class="participant-field-grid">
+              <label class="participant-label" for="participantName">YOUR NAME<input id="participantName" type="text" maxlength="50" autocomplete="name" placeholder="e.g. Arnav Goyal"></label>
+              <label class="participant-label" for="participantId">CLASS / ROLL ID<input id="participantId" type="text" maxlength="32" autocomplete="off" placeholder="e.g. CSE-24-018"></label>
+            </div>
+            <p class="participant-privacy" id="participantStatus" aria-live="polite">Enter both details to enable bidding. They stay in this browser; the organizer and other bidders will only see your wallet address.</p>
+          </section>
           <div id="commitPanel">
             <label class="field-label" for="bidInput">YOUR BID <span>Private until reveal</span></label>
             <div class="amount-input-wrap"><input id="bidInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" autocomplete="off"><span class="amount-unit">DEMO UNITS</span></div>

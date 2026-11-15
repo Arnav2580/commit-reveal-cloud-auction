@@ -10,6 +10,7 @@
   };
   const secretKey = () => `cloudauction:v1:${NETWORKS[state.network].chainId}:${state.address.toLowerCase()}:${state.account.toLowerCase()}`;
   const secretIdentityKey = (address) => `cloudauction:v1:${NETWORKS[state.network].chainId}:${state.address.toLowerCase()}:${address.toLowerCase()}`;
+  const participantKey = () => `cloudauction:participant:v1:${NETWORKS[state.network].chainId}:${state.address.toLowerCase()}`;
   const shorten = (s, a = 6, b = 4) => s ? `${s.slice(0, a)}…${s.slice(-b)}` : '—';
   const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
   const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -30,7 +31,32 @@
     const url = new URL(location.href); url.search = ''; url.hash = '';
     url.searchParams.set('network', state.network);
     if (state.address) url.searchParams.set('address', state.address);
+    url.hash = 'bidCard';
     return url.toString();
+  }
+  function participantProfile() {
+    return { name: $('participantName').value.trim(), identifier: $('participantId').value.trim() };
+  }
+  function participantReady(profile = participantProfile()) {
+    return profile.name.length >= 2 && profile.name.length <= 50 && profile.identifier.length >= 1 && profile.identifier.length <= 32;
+  }
+  function updateParticipantProfile() {
+    const profile = participantProfile();
+    let stored = false;
+    try {
+      if (state.address) { localStorage.setItem(participantKey(), JSON.stringify(profile)); stored = true; }
+    } catch {}
+    if (participantReady(profile) && stored) $('participantStatus').textContent = 'Details saved only in this browser. The organizer and other bidders do not receive them; the public chain shows your wallet address.';
+    else if (participantReady(profile)) $('participantStatus').textContent = 'Details are complete, but browser storage is unavailable. Enable local storage before bidding.';
+    else $('participantStatus').textContent = 'Enter your name and class / roll ID to enable bidding. These details stay in this browser.';
+    updateBidMeter();
+  }
+  function loadParticipantProfile() {
+    let profile = {};
+    try { profile = JSON.parse(localStorage.getItem(participantKey()) || '{}'); } catch {}
+    $('participantName').value = typeof profile.name === 'string' ? profile.name.slice(0, 50) : '';
+    $('participantId').value = typeof profile.identifier === 'string' ? profile.identifier.slice(0, 32) : '';
+    updateParticipantProfile();
   }
   function updateQr() {
     const target = currentInviteUrl(); $('shareUrlLabel').textContent = state.address ? target : 'Choose a contract address to create an invite';
@@ -58,7 +84,7 @@
   function saveAddress() {
     const value = $('auctionAddressInput').value.trim();
     if (!ethers.isAddress(value)) { toast('Enter a valid 0x contract address.', 'error'); return; }
-    state.address = ethers.getAddress(value); localStorage.setItem(`cloudauction:address:${state.network}`, state.address);
+    state.address = ethers.getAddress(value); localStorage.setItem(`cloudauction:address:${state.network}`, state.address); loadParticipantProfile();
     const url = new URL(location.href); url.searchParams.set('address', state.address); url.searchParams.set('network', state.network); history.replaceState({}, '', url);
     $('auctionDialog').close(); updateQr(); resetConnection(); loadReadOnly();
   }
@@ -66,7 +92,7 @@
     if (!state.address) state.address = localStorage.getItem(`cloudauction:address:${state.network}`) || '';
     if (state.address && ethers.isAddress(state.address)) state.address = ethers.getAddress(state.address); else state.address = '';
     if(state.address) localStorage.setItem(`cloudauction:address:${state.network}`,state.address);
-    updateQr();
+    loadParticipantProfile(); updateQr();
     if(state.address) loadReadOnly();
   }
   async function loadDeploymentDefault() {
@@ -80,6 +106,7 @@
       const entry=deployments[state.network];
       if(!entry?.address || !ethers.isAddress(entry.address)) return;
       state.address=ethers.getAddress(entry.address); localStorage.setItem(`cloudauction:address:${state.network}`,state.address);
+      loadParticipantProfile();
       const url=new URL(location.href); url.searchParams.set('address',state.address); url.searchParams.set('network',state.network); history.replaceState({},'',url);
       updateQr(); await loadReadOnly();
     } catch {}
@@ -200,6 +227,7 @@
   function saveSecret(secret) { localStorage.setItem(secretKey(), JSON.stringify(secret)); }
   function renderParticipation(bidder) {
     const committed = Boolean(bidder?.committed), revealed = Boolean(bidder?.revealed);
+    $('participantFields').classList.toggle('hidden', !state.address || committed || state.phase !== 0);
     $('commitPanel').classList.toggle('hidden', committed || !state.account || state.phase !== 0);
     $('committedPanel').classList.toggle('hidden', !committed);
     $('walletPrompt').classList.toggle('hidden', Boolean(state.account));
@@ -224,7 +252,7 @@
     const max = state.maxBid ? Number(ethers.formatEther(state.maxBid)) : 0; const val = Number($('bidInput').value || 0);
     const pct = max > 0 ? Math.max(0, Math.min(100, val / max * 100)) : 0;
     $('limitMeter').style.width = `${pct}%`; $('limitMeter').classList.toggle('near-limit', pct > 80);
-    const valid = state.phase === 0 && Number.isFinite(val) && val > 0 && val <= max;
+    const valid = state.phase === 0 && Number.isFinite(val) && val > 0 && val <= max && participantReady();
     $('commitButton').disabled = !valid || !state.account;
   }
   function renderResult(result) {
@@ -277,6 +305,8 @@
     } catch {}
   }
   async function commitBid() {
+    const profile = participantProfile();
+    if (!participantReady(profile)) { toast('Enter your name and class / roll ID before bidding.', 'error'); return; }
     const amount = $('bidInput').value;
     let bid; try { bid = ethers.parseEther(amount); } catch { toast('Enter a valid decimal bid amount.', 'error'); return; }
     if (bid <= 0n || bid > state.maxBid) { toast('Your bid must be positive and within the on-chain maximum.', 'error'); return; }
@@ -339,6 +369,7 @@
     $('connectButton').addEventListener('click',()=>connectWallet(true)); $('promptConnect').addEventListener('click',()=>connectWallet(true));
     $('configureAuction').addEventListener('click',openAuctionDialog); $('shareButton').addEventListener('click',showShare);
     $('saveAuction').addEventListener('click',saveAddress); $('closeAuction').addEventListener('click',()=>$('auctionDialog').close());
+    $('participantName').addEventListener('input',updateParticipantProfile); $('participantId').addEventListener('input',updateParticipantProfile);
     $('copyLink').addEventListener('click',()=>copyText(currentInviteUrl())); $('dialogCopy').addEventListener('click',()=>copyText(currentInviteUrl())); $('closeShare').addEventListener('click',()=>$('shareDialog').close());
     $('networkSelect').addEventListener('change',e=>switchNetwork(e.target.value)); $('bidInput').addEventListener('input',updateBidMeter);
     $('commitButton').addEventListener('click',commitBid); $('downloadSecret').addEventListener('click',downloadSecret); $('importSecretButton').addEventListener('click',()=>$('secretFileInput').click());
