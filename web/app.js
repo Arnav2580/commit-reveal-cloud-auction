@@ -3,7 +3,7 @@
   const $ = (id) => document.getElementById(id);
   const params = new URLSearchParams(location.search);
   const preferredNetwork = params.get('network') === 'localhost' || params.get('chainId') === '31337' ? 'localhost' : 'sepolia';
-  const state = { network: preferredNetwork, networkChosen:params.has('network')||params.has('chainId'), address: params.get('address') || '', provider: null, readProvider: null, readContract: null, signer: null, contract: null, account: '', abi: null, phase: null, auction: null, clockOffset: 0, refreshTimer: null, countdownTimer: null, events: [] };
+  const state = { network: preferredNetwork, networkChosen:params.has('network')||params.has('chainId'), address: params.get('address') || '', provider: null, readProvider: null, readContract: null, signer: null, contract: null, account: '', abi: null, phase: null, auction: null, clockOffset: 0, refreshTimer: null, countdownTimer: null, events: [], participantStored: false };
   const NETWORKS = {
     sepolia: { chainId: 11155111, hexChainId: '0xaa36a7', name: 'Sepolia', currency: 'SepoliaETH', rpc: 'https://rpc.sepolia.org', explorer: 'https://sepolia.etherscan.io' },
     localhost: { chainId: 31337, hexChainId: '0x7a69', name: 'Local Hardhat', currency: 'ETH', rpc: `${location.protocol}//${location.hostname || '127.0.0.1'}:8545`, explorer: '' }
@@ -46,8 +46,9 @@
     try {
       if (state.address) { localStorage.setItem(participantKey(), JSON.stringify(profile)); stored = true; }
     } catch {}
+    state.participantStored = stored;
     if (participantReady(profile) && stored) $('participantStatus').textContent = 'Details saved only in this browser. The organizer and other bidders do not receive them; the public chain shows your wallet address.';
-    else if (participantReady(profile)) $('participantStatus').textContent = 'Details are complete, but browser storage is unavailable. Enable local storage before bidding.';
+    else if (!stored && state.address) $('participantStatus').textContent = 'Browser storage is unavailable. Enable local storage to save your details and bid safely.';
     else $('participantStatus').textContent = 'Enter your name and class / roll ID to enable bidding. These details stay in this browser.';
     updateBidMeter();
   }
@@ -252,7 +253,7 @@
     const max = state.maxBid ? Number(ethers.formatEther(state.maxBid)) : 0; const val = Number($('bidInput').value || 0);
     const pct = max > 0 ? Math.max(0, Math.min(100, val / max * 100)) : 0;
     $('limitMeter').style.width = `${pct}%`; $('limitMeter').classList.toggle('near-limit', pct > 80);
-    const valid = state.phase === 0 && Number.isFinite(val) && val > 0 && val <= max && participantReady();
+    const valid = state.phase === 0 && Number.isFinite(val) && val > 0 && val <= max && participantReady() && state.participantStored;
     $('commitButton').disabled = !valid || !state.account;
   }
   function renderResult(result) {
