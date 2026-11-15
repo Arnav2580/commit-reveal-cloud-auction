@@ -64,6 +64,10 @@ To serve the UI separately, use `npm run app`. The auction address can be added 
 
 ### Sepolia classroom deployment
 
+The hosted classroom app can deploy a fresh auction directly from the **Auction Setup** dialog. Select “Deploy with wallet,” choose a resource description and maximum bid, set the commit/reveal windows, and confirm the deployment transaction in a wallet on Sepolia. This avoids putting an organizer private key on the static host. The organizer needs Sepolia test ETH for deployment gas; bidders need Sepolia test ETH for their own transaction gas. Once deployed, the page creates a shareable QR invite for that contract.
+
+Attendees open the QR link, enter a name and class/roll identifier, connect their own wallet, and commit a bid subject to the contract’s ceiling. Names and class/roll identifiers are saved only in that attendee’s browser and are not transmitted to the organizer or contract; use a separate instructor-managed roster if identity verification is required. The contract prevents repeat commitments from the same wallet but cannot prevent one person from using multiple wallets.
+
 1. Copy `.env.example` to `.env` and set `SEPOLIA_RPC_URL`, `DEPLOYER_PRIVATE_KEY` for a test-only deployer, and the desired limits. `.env` is git-ignored and loaded by Hardhat.
 2. Compile and deploy with `npm run compile` and `npm run deploy:sepolia`. The script records the public contract address in `web/deployments.json` and prints an invite URL.
 3. Host the `web/` folder on an HTTPS static host. Ensure the generated `deployments.json` is included, or open the site with `?network=sepolia&address=<contract-address>`.

@@ -82,6 +82,48 @@
     const url = currentInviteUrl(); $('dialogUrl').textContent = url; $('shareDialog').showModal();
   }
   function openAuctionDialog() { $('auctionAddressInput').value = state.address; $('auctionDialog').showModal(); }
+  async function deployAuctionFromWallet() {
+    const description = $('deployDescription').value.trim();
+    const maxBidText = $('deployMaxBid').value.trim();
+    const commitDuration = Number($('deployCommitDuration').value);
+    const revealDuration = Number($('deployRevealDuration').value);
+    if (description.length < 4 || description.length > 160) { toast('Enter a resource description between 4 and 160 characters.', 'error'); return; }
+    if (!Number.isSafeInteger(commitDuration) || commitDuration < 60 || commitDuration > 3600 || !Number.isSafeInteger(revealDuration) || revealDuration < 60 || revealDuration > 3600) { toast('Commit and reveal windows must be whole seconds between 60 and 3600.', 'error'); return; }
+    let maxBid;
+    try { maxBid = ethers.parseEther(maxBidText); } catch { toast('Enter a valid positive bid ceiling.', 'error'); return; }
+    if (maxBid <= 0n || Number(maxBidText) > 100000) { toast('The bid ceiling must be greater than zero and at most 100,000 demo units.', 'error'); return; }
+    if (!window.ethereum) { toast('Open this page in a compatible wallet browser to deploy the auction.', 'error'); return; }
+
+    const previousNetwork = state.network, previousAddress = state.address;
+    const button = $('deployAuctionButton'); setBusy(button, true, 'Confirm deployment in wallet…');
+    try {
+      state.network = 'sepolia'; state.networkChosen = true; $('networkSelect').value = 'sepolia';
+      await ensureNetwork();
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send('eth_requestAccounts', []);
+      const signer = await provider.getSigner();
+      const [abiResponse, bytecodeResponse] = await Promise.all([fetch('/auction-abi.json'), fetch('/auction-bytecode.json')]);
+      if (!abiResponse.ok || !bytecodeResponse.ok) throw new Error('Auction deployment files are missing. Refresh the app or contact the organizer.');
+      const abi = parseAbiPayload(await abiResponse.json());
+      const bytecodePayload = await bytecodeResponse.json();
+      const bytecode = bytecodePayload?.bytecode;
+      if (typeof bytecode !== 'string' || !/^0x[0-9a-f]+$/i.test(bytecode)) throw new Error('The auction deployment bytecode is invalid.');
+      const factory = new ethers.ContractFactory(abi, bytecode, signer);
+      const auction = await factory.deploy(1, description, commitDuration, revealDuration, maxBid);
+      toast('Auction deployment submitted. Waiting for Sepolia confirmation…');
+      await auction.waitForDeployment();
+      state.address = ethers.getAddress(await auction.getAddress());
+      localStorage.setItem(`cloudauction:address:${state.network}`, state.address);
+      loadParticipantProfile();
+      const url = new URL(location.href); url.searchParams.set('network', state.network); url.searchParams.set('address', state.address); url.hash = 'bidCard'; history.replaceState({}, '', url);
+      $('auctionDialog').close(); updateQr();
+      await connectWallet(false);
+      toast('Auction is live. Share the QR code so each attendee can enter their details and bid.', 'success', 7000);
+    } catch (err) {
+      state.network = previousNetwork; state.address = previousAddress; $('networkSelect').value = previousNetwork;
+      const message = friendlyError(err); notice(message, 'error'); toast(message, 'error'); updateQr();
+    } finally { setBusy(button, false); }
+  }
   function saveAddress() {
     const value = $('auctionAddressInput').value.trim();
     if (!ethers.isAddress(value)) { toast('Enter a valid 0x contract address.', 'error'); return; }
@@ -370,6 +412,7 @@
     $('connectButton').addEventListener('click',()=>connectWallet(true)); $('promptConnect').addEventListener('click',()=>connectWallet(true));
     $('configureAuction').addEventListener('click',openAuctionDialog); $('shareButton').addEventListener('click',showShare);
     $('saveAuction').addEventListener('click',saveAddress); $('closeAuction').addEventListener('click',()=>$('auctionDialog').close());
+    $('deployAuctionButton').addEventListener('click',deployAuctionFromWallet);
     $('participantName').addEventListener('input',updateParticipantProfile); $('participantId').addEventListener('input',updateParticipantProfile);
     $('copyLink').addEventListener('click',()=>copyText(currentInviteUrl())); $('dialogCopy').addEventListener('click',()=>copyText(currentInviteUrl())); $('closeShare').addEventListener('click',()=>$('shareDialog').close());
     $('networkSelect').addEventListener('change',e=>switchNetwork(e.target.value)); $('bidInput').addEventListener('input',updateBidMeter);
