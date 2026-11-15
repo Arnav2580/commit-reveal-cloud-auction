@@ -1,135 +1,56 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f5f7f4">
-  <meta name="description" content="A transparent, classroom-scale sealed bid auction demo for shared cloud resources.">
-  <title>CloudAuction | Resource allocation lab</title>
+  <meta name="theme-color" content="#f4f6f2">
+  <meta name="description" content="Run a live classroom auction simulation. Create a room, share its QR code, and let everyone bid together.">
+  <title>CloudAuction | Classroom simulation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/styles.css">
-  <script src="/vendor/ethers.umd.min.js"></script>
-  <script src="/app.js" defer></script>
+  <link rel="stylesheet" href="/classroom.css">
+  <script src="/classroom.js" defer></script>
 </head>
 <body>
-  <div class="announcement"><span class="pulse"></span> CLASSROOM TEST ENVIRONMENT <span class="announcement-divider">·</span> No real funds are accepted or transferred</div>
-  <header class="topbar">
-    <a class="brand" href="/" aria-label="CloudAuction home">
-      <span class="brand-mark"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M12.5 25.4a7 7 0 0 1 .4-14 9.3 9.3 0 0 1 17.6 2.7 5.8 5.8 0 0 1-.9 11.3H12.5Z"/><path d="M16 20h8m-4-4v8"/></svg></span>
-      <span class="brand-name">cloud<span>auction</span><small>RESOURCE ALLOCATION LAB</small></span>
-    </a>
-    <nav class="desktop-nav" aria-label="Main navigation"><a class="active" href="#auction">Auction</a><a href="#how-it-works">How it works</a><a href="#activity">Activity</a></nav>
-    <div class="top-actions">
-      <label class="network-picker"><span class="network-dot"></span><select id="networkSelect" aria-label="Network"><option value="sepolia">Sepolia testnet</option><option value="localhost">Local demo chain</option></select><span class="chevron">⌄</span></label>
-      <button class="wallet-button" id="connectButton"><span class="wallet-icon">◈</span><span id="walletLabel">Connect wallet</span></button>
-      <button class="mobile-menu" id="menuButton" aria-label="Open menu">☰</button>
-    </div>
-  </header>
-
+  <div class="topline"><span class="pulse"></span> LIVE CLASSROOM SIMULATION <span class="topline-note">No wallet · no testnet · no real money</span></div>
+  <header class="header"><a class="brand" href="/" aria-label="CloudAuction home"><span class="brand-symbol">☁</span><span>cloud<span>auction</span><small>RESOURCE ALLOCATION LAB</small></span></a><a class="paper-link" href="/paper/research-paper.pdf" target="_blank" rel="noreferrer">Research paper ↗</a></header>
   <main>
-    <section class="hero" id="auction">
-      <div class="hero-copy">
-        <div class="eyebrow"><span class="eyebrow-line"></span> A FAIRER WAY TO ALLOCATE SHARED COMPUTE</div>
-        <h1>Good resources.<br><span>Fairly allocated.</span></h1>
-        <p class="hero-description">A sealed-bid classroom experiment. Commit privately, reveal together, and let the rules pick a winner.</p>
-        <div class="hero-proof"><span class="proof-icon">✓</span><span>Your bid stays hidden during the commit phase.</span></div>
-        <div class="hero-proof"><span class="proof-icon">✓</span><span>One commitment per wallet. A hard maximum bid.</span></div>
-        <a class="text-link" href="#how-it-works">See how the auction works <span>↗</span></a>
-      </div>
-      <div class="hero-visual" aria-label="Abstract illustration of cloud infrastructure">
-        <div class="visual-grid"></div><div class="orb orb-one"></div><div class="orb orb-two"></div>
-        <div class="cloud-illustration">
-          <div class="cloud-glow"></div>
-          <svg class="cloud-svg" viewBox="0 0 390 290" role="img" aria-label="Cloud connected to three virtual machines">
-            <defs><linearGradient id="cloudFill" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#e7f4ee"/></linearGradient><filter id="softShadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="14" stdDeviation="12" flood-color="#162820" flood-opacity=".12"/></filter></defs>
-            <path d="M102 112a40 40 0 0 1 3-80 57 57 0 0 1 106 18 34 34 0 0 1-5 67H102Z" fill="url(#cloudFill)" stroke="#c9ded2" stroke-width="2" filter="url(#softShadow)"/>
-            <path d="M147 70h30m-15-15v30" stroke="#17835d" stroke-width="4" stroke-linecap="round"/>
-            <path d="M190 121v32m-61 0h122m-122 0v20m61-20v20m61-20v20" fill="none" stroke="#9ab5a7" stroke-width="2" stroke-dasharray="4 5"/>
-            <g filter="url(#softShadow)"><rect x="68" y="172" width="74" height="74" rx="15" fill="#fff" stroke="#d8e6de"/><rect x="158" y="172" width="74" height="74" rx="15" fill="#fff" stroke="#b8ddcb"/><rect x="248" y="172" width="74" height="74" rx="15" fill="#fff" stroke="#d8e6de"/></g>
-            <g fill="#17835d"><circle cx="88" cy="194" r="4"/><circle cx="178" cy="194" r="4"/><circle cx="268" cy="194" r="4"/></g>
-            <g stroke="#a5b9ad" stroke-width="4" stroke-linecap="round"><path d="M99 194h26m-26 12h26m-26 12h18"/><path d="M189 194h26m-26 12h26m-26 12h18"/><path d="M279 194h26m-26 12h26m-26 12h18"/></g>
-            <text x="104" y="265" text-anchor="middle" fill="#62746a" font-size="10" font-family="DM Mono">VM · 01</text><text x="194" y="265" text-anchor="middle" fill="#17835d" font-size="10" font-family="DM Mono">VM · 02</text><text x="284" y="265" text-anchor="middle" fill="#62746a" font-size="10" font-family="DM Mono">VM · 03</text>
-          </svg>
-          <div class="visual-note"><span class="visual-note-dot"></span> One resource · shared rules</div>
-        </div>
-        <div class="floating-tag tag-top"><span class="tag-lock">◉</span> PRIVATE COMMIT</div>
-        <div class="floating-tag tag-bottom"><span class="tag-spark">✳</span> TRANSPARENT RESULT</div>
-        <div class="visual-coordinate">EDU / LAB — 001</div>
-      </div>
+    <section class="hero"><div><div class="eyebrow">A FAIRER WAY TO SHARE SCARCE RESOURCES</div><h1>One room.<br><em>Many bidders.</em></h1><p>Create a classroom auction in seconds. Share one QR code and everyone joins from their own phone or laptop. Bids stay sealed until the room closes.</p><div class="hero-badges"><span>✓ Works in a browser</span><span>✓ No crypto account</span><span>✓ Live across devices</span></div></div><div class="hero-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="server-stack"><i></i><i></i><i></i></div><div class="float-tag tag-a">PRIVATE BIDS</div><div class="float-tag tag-b">LIVE ROOM</div><div class="float-tag tag-c">FAIR ALLOCATION</div></div></section>
+    <div id="notice" class="notice hidden" role="status"></div>
+    <section id="createView" class="create-layout">
+      <article class="panel create-panel"><div class="kicker">ORGANIZER SETUP</div><h2>Create your auction room</h2><p class="muted">Choose the resource and how long participants can bid. The system creates a random room code and hidden individual bid ceilings.</p>
+        <form id="createForm">
+          <label class="field">ROOM NAME<input id="roomTitle" maxlength="60" required value="Classroom Resource Auction" placeholder="e.g. Computer lab allocation"></label>
+          <label class="field">RESOURCE TO ALLOCATE<input id="resource" maxlength="160" required value="VM-001 · 4 CPU · 16 GB RAM · 100 GB storage" placeholder="Describe the shared resource"></label>
+          <label class="field">BIDDING WINDOW<select id="duration"><option value="180">3 minutes · quick demo</option><option value="300" selected>5 minutes · classroom</option><option value="600">10 minutes</option><option value="900">15 minutes</option><option value="1800">30 minutes</option></select></label>
+          <button class="button primary" type="submit" id="createButton">Create room <span>→</span></button>
+        </form>
+        <div class="privacy-note"><span>✳</span><span>Names and class IDs are visible to the room organizer. The private per-person bid ceiling is never shown. This is a classroom points simulation, not a payment system.</span></div>
+      </article>
+      <aside class="panel how-panel"><div class="kicker">HOW IT WORKS</div><h3>From QR to result</h3><ol class="steps"><li><b>01</b><span><strong>Create a room</strong><small>Set the resource and bidding time.</small></span></li><li><b>02</b><span><strong>Share one QR code</strong><small>Classmates join from any device.</small></span></li><li><b>03</b><span><strong>Open and close bidding</strong><small>Everyone submits one private bid.</small></span></li><li><b>04</b><span><strong>Reveal the winner</strong><small>Only eligible bids are considered.</small></span></li></ol><div class="upcoming"><span class="upcoming-dot"></span><span><b>Wallet and testnet bidding</b><small>Upcoming feature</small></span></div></aside>
     </section>
 
-    <section class="status-strip" aria-label="Auction status">
-      <div class="status-item phase-item"><span class="status-label">CURRENT PHASE</span><span class="phase-pill" id="phasePill"><i></i><span id="phaseLabel">Connecting…</span></span></div>
-      <div class="status-item"><span class="status-label">TIME REMAINING</span><strong class="countdown" id="countdown">--:--</strong></div>
-      <div class="status-item"><span class="status-label">COMMITTED WALLETS</span><strong id="bidderCount">— <small>participants</small></strong></div>
-      <div class="status-item"><span class="status-label">BID LIMIT</span><strong id="limitLabel">— <small>demo units</small></strong></div>
-      <div class="status-item last-refresh"><span class="status-label">CHAIN CHECK</span><strong><span class="live-dot"></span><span id="chainLabel">Not connected</span></strong></div>
-    </section>
-
-    <div id="globalNotice" class="notice hidden" role="status"></div>
-
-    <section class="workspace">
-      <div class="main-column">
-        <article class="resource-card">
-          <div class="resource-top"><div><div class="section-kicker">THE RESOURCE</div><div class="resource-name-row"><h2 id="resourceName">Choose an auction</h2><span class="resource-badge">SHARED COMPUTE</span></div></div><div class="resource-buttons"><button class="icon-button" id="configureAuction" title="Choose auction" aria-label="Choose auction">⌖</button><button class="icon-button" id="shareButton" title="Share this auction" aria-label="Share this auction">↗</button></div></div>
-          <p class="resource-desc" id="resourceDescription">Connect a wallet and choose an auction to view its resource.</p>
-          <div class="resource-specs"><div class="spec"><span class="spec-icon">⌘</span><span><b id="specCpu">—</b><small>COMPUTE</small></span></div><div class="spec"><span class="spec-icon">▤</span><span><b id="specMemory">—</b><small>MEMORY</small></span></div><div class="spec"><span class="spec-icon">◫</span><span><b id="specStorage">—</b><small>STORAGE</small></span></div><div class="spec"><span class="spec-icon">◷</span><span><b id="specDuration">—</b><small>ALLOCATION</small></span></div></div>
-          <div class="resource-foot"><span><span class="status-dot" id="allocationDot"></span><span id="allocationLabel">Waiting for allocation</span></span><span class="resource-id" id="resourceId">RESOURCE / —</span></div>
-        </article>
-
-        <article class="bid-card" id="bidCard">
-          <div class="card-heading"><div><div class="section-kicker">YOUR PARTICIPATION</div><h2 id="bidHeading">Place a sealed bid</h2><p id="bidSubheading">Set your maximum value. No one can see it during the commit phase.</p></div><div class="step-count"><span id="stepNumber">01</span><span>/ 02</span></div></div>
-          <section id="participantFields" class="participant-fields" aria-labelledby="participantHeading">
-            <div class="participant-fields-heading"><strong id="participantHeading">First, identify your classroom entry</strong><span>Required before bidding</span></div>
-            <div class="participant-field-grid">
-              <label class="participant-label" for="participantName">YOUR NAME<input id="participantName" type="text" maxlength="50" autocomplete="name" placeholder="e.g. Arnav Goyal"></label>
-              <label class="participant-label" for="participantId">CLASS / ROLL ID<input id="participantId" type="text" maxlength="32" autocomplete="off" placeholder="e.g. CSE-24-018"></label>
-            </div>
-            <p class="participant-privacy" id="participantStatus" aria-live="polite">Enter both details to enable bidding. They stay in this browser; the organizer and other bidders will only see your wallet address. Use a classroom roster separately if the instructor needs to verify identities.</p>
-          </section>
-          <div id="commitPanel">
-            <label class="field-label" for="bidInput">YOUR BID <span>Private until reveal</span></label>
-            <div class="amount-input-wrap"><input id="bidInput" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" autocomplete="off"><span class="amount-unit">DEMO UNITS</span></div>
-            <div class="limit-row"><span>Maximum accepted bid</span><strong id="maxBidInline">— units</strong></div>
-            <div class="limit-meter"><span id="limitMeter"></span></div>
-            <div class="secret-note"><span class="note-lock">⌑</span><span>A random secret is generated on this device. <b>Download your recovery file after committing.</b></span></div>
-            <button class="primary-button" id="commitButton" disabled><span>Commit sealed bid</span><span class="button-arrow">→</span></button>
+    <section id="roomView" class="hidden">
+      <div class="room-heading"><div><div class="kicker" id="roomRole">CLASSROOM AUCTION</div><h2 id="roomTitleDisplay">Auction room</h2><p id="resourceDisplay" class="muted"></p></div><div class="room-code"><small>ROOM CODE</small><strong id="roomCode"></strong><button id="copyInvite" class="text-button">Copy invite link</button></div></div>
+      <div class="room-grid">
+        <article class="panel primary-room-panel">
+          <div class="phase-row"><span id="phaseBadge" class="phase-badge">WAITING</span><span id="countdown" class="countdown"></span></div>
+          <div id="hostQr" class="qr-area hidden"><div class="qr-frame"><img id="qrImage" alt="QR code to join this classroom auction"></div><div><h3>Invite your class</h3><p>Scan this code to enter the room. Participants need only a name and class / roll ID.</p><button id="shareButton" class="button secondary">Share invite link ↗</button></div></div>
+          <div id="hostActions" class="host-actions hidden"><button id="startButton" class="button primary">Open bidding <span>→</span></button><button id="closeButton" class="button secondary hidden">Close bidding</button><button id="finalizeButton" class="button primary hidden">Reveal results <span>→</span></button><p class="muted small" id="hostHint">Once bidding opens, this room accepts one bid per registered participant.</p></div>
+          <div id="joinPanel" class="join-panel hidden"><div id="registerFormWrap"><h3>Join this room</h3><p class="muted">Enter your classroom details to take part.</p><form id="joinForm"><label class="field">YOUR NAME<input id="bidderName" maxlength="50" required autocomplete="name" placeholder="e.g. Arnav Goyal"></label><label class="field">CLASS / ROLL ID<input id="studentId" maxlength="32" required autocomplete="off" placeholder="e.g. CSE-24-018"></label><button type="submit" class="button primary">Join auction <span>→</span></button></form></div>
+            <div id="bidFormWrap" class="hidden"><div class="kicker">YOUR ENTRY</div><h3 id="welcomeName">Welcome</h3><p class="muted">Your entry is registered. Submit one bid while the organizer has bidding open.</p><form id="bidForm"><label class="field">YOUR BID <span class="field-side">Demo points · whole numbers</span><input id="bidAmount" type="number" inputmode="numeric" min="1" max="1000000" step="1" placeholder="Enter your bid" required></label><button id="bidButton" type="submit" class="button primary" disabled>Submit sealed bid <span>→</span></button></form><p class="privacy-note compact">Your maximum eligible bid is individually randomized and hidden from everyone, including you. Eligibility is checked after bidding closes.</p><div id="bidReceipt" class="receipt hidden"></div></div>
           </div>
-          <div id="committedPanel" class="committed-panel hidden">
-            <div class="success-orbit"><span>✓</span></div><div class="committed-copy"><strong>Your commitment is on-chain</strong><p id="commitHashLabel">The amount remains hidden until reveal.</p></div>
-            <div class="commitment-actions"><button class="secondary-button" id="downloadSecret">↓ Download recovery file</button><button class="text-button" id="importSecretButton">Restore a bid</button><input id="secretFileInput" type="file" accept="application/json,.json" hidden></div>
-            <div class="reveal-secret hidden" id="revealReady"><div class="reveal-ready-icon">◷</div><div><b>Reveal phase is open</b><p>Reveal with your saved bid secret to enter winner selection.</p></div><button class="primary-button compact" id="revealButton">Reveal bid <span>→</span></button></div>
-            <div class="revealed-state hidden" id="revealedState"><span class="checkmark">✓</span><div><b>Bid revealed</b><small>Your bid is now public on-chain. Winner is selected after the reveal window closes.</small></div></div>
-          </div>
-          <div class="wallet-prompt" id="walletPrompt"><span class="prompt-icon">◈</span><span>Connect a wallet to participate in this auction.</span><button class="text-button" id="promptConnect">Connect wallet →</button></div>
+          <div id="resultsPanel" class="results hidden"><div class="kicker">AUCTION RESULT</div><h3 id="winnerHeadline"></h3><div id="resultsList"></div></div>
         </article>
-
-        <section class="how-section" id="how-it-works"><div class="section-heading"><div><div class="section-kicker">A SIMPLE THREE-STEP FLOW</div><h2>Private first. Fair at the finish.</h2></div><span class="heading-aside">COMMIT → REVEAL → ALLOCATE</span></div>
-          <div class="flow-grid"><article class="flow-step"><span class="flow-index">01</span><div class="flow-icon lock-flow">⌑</div><h3>Commit privately</h3><p>Your bid is hashed with a random secret. Only the hash reaches the chain.</p><span class="flow-caption">BID VALUE HIDDEN</span></article><article class="flow-step"><span class="flow-index">02</span><div class="flow-icon reveal-flow">◷</div><h3>Reveal together</h3><p>When the phase opens, submit the bid and saved secret that match your commitment.</p><span class="flow-caption">BIDS BECOME PUBLIC</span></article><article class="flow-step"><span class="flow-index">03</span><div class="flow-icon allocate-flow">✳</div><h3>Allocate transparently</h3><p>After reveal closes, the contract selects the highest valid bid.</p><span class="flow-caption">RESULT ON-CHAIN</span></article></div>
-        </section>
+        <aside class="panel room-stats"><div class="kicker">ROOM PULSE</div><div class="stat"><strong id="participantCount">0</strong><span>participants joined</span></div><div class="stat"><strong id="bidCount">0</strong><span>sealed bids submitted</span></div><div id="participantList" class="participant-list"></div><div id="hostRoster" class="host-roster hidden"></div></aside>
       </div>
-
-      <aside class="side-column">
-        <article class="share-card"><div class="share-top"><div><div class="section-kicker">INVITE YOUR CLASS</div><h2>Scan to join</h2></div><span class="share-live"><i></i> LIVE LINK</span></div><p>Share the public auction link. Your bid secret is never part of it.</p><div class="qr-frame"><div id="qrCode" class="qr-code"><div class="qr-placeholder"><span>⌁</span><small>Connect to create your<br>classroom invite</small></div></div></div><div class="share-url-row"><span id="shareUrlLabel">Auction link will appear here</span><button class="copy-button" id="copyLink" disabled>Copy</button></div><div class="qr-footnote"><span>↗</span> Public link only · QR image via api.qrserver.com</div></article>
-
-        <article class="result-card"><div class="section-kicker">LIVE AUCTION</div><div class="result-top"><h2>Allocation result</h2><span class="sealed-stamp" id="resultStamp">SEALED</span></div><div id="resultPlaceholder" class="result-placeholder"><span class="result-lock">⌑</span><strong>Result after reveal</strong><p>Valid bids are compared when the reveal window closes.</p></div><div id="resultDetails" class="result-details hidden"><span class="winner-label">WINNING BID</span><strong class="winning-amount" id="winningBid">—</strong><span class="winner-label">ALLOCATED TO</span><code id="winnerAddress">—</code></div><button id="finalizeButton" class="secondary-button finalize-button hidden">Finalize auction <span>→</span></button></article>
-
-        <article class="activity-card" id="activity"><div class="activity-heading"><div><div class="section-kicker">ON-CHAIN</div><h2>Room activity</h2></div><button id="refreshButton" class="refresh-button" aria-label="Refresh activity" title="Refresh">↻</button></div><div id="activityList" class="activity-list"><div class="activity-empty"><span>◷</span><p>Connect to the auction to see live activity.</p></div></div><div class="activity-foot"><span class="live-dot"></span> Updates from the chain <span id="lastUpdated">—</span></div></article>
-
-        <details class="organizer-card" id="organizerPanel"><summary><span class="organizer-icon">⚙</span><span><b>Organizer controls</b><small>For the auction creator</small></span><span class="organizer-chevron">⌄</span></summary><div class="organizer-body"><p>Phase changes are recorded on-chain and cannot be undone.</p><button id="startRevealButton" class="secondary-button organizer-action hidden">Open reveal phase <span>→</span></button><div id="organizerHint" class="organizer-hint">Connect with the auctioneer wallet to manage phase transitions.</div></div></details>
-      </aside>
+      <p class="room-footnote">A demo simulation running in this room’s browser server. No funds are collected. The winner is the highest bid that fits that bidder’s private limit.</p>
     </section>
 
-    <section class="trust-banner"><div class="trust-icon">✳</div><div><b>Built for learning. Explicitly not for real money.</b><p>This classroom prototype records allocation only. It does not accept bids as payment or provision a virtual machine. Wallet transactions still use test ETH for network gas.</p></div><a href="/paper/research-paper.pdf" target="_blank" rel="noreferrer">Read the research paper ↗</a></section>
+    <section class="principles"><div><span>01</span><b>Private by design</b><p>Other bidders cannot see submitted amounts before the room closes.</p></div><div><span>02</span><b>Randomized limits</b><p>Each participant gets a different hidden ceiling, randomized for each room within a ±30 point band.</p></div><div><span>03</span><b>One entry, one bid</b><p>Class / roll IDs and one-bid rules help keep a classroom round orderly.</p></div></section>
   </main>
-
-  <footer class="footer"><span>© 2026 CLOUD AUCTION LAB</span><span>OPEN RULES. HIDDEN BIDS. TRANSPARENT RESULTS.</span><a href="/readme.md" target="_blank">PROJECT NOTES ↗</a></footer>
-  <div class="toast-region" id="toastRegion" aria-live="polite" aria-atomic="true"></div>
-  <dialog id="shareDialog" class="share-dialog"><button class="dialog-close" id="closeShare" aria-label="Close">×</button><div class="section-kicker">SHARE CLASSROOM AUCTION</div><h2>Invite your bidders</h2><p>Anyone with this public link can view the auction. Bidding still requires a wallet and a transaction.</p><div class="dialog-url" id="dialogUrl"></div><button class="primary-button" id="dialogCopy">Copy invite link <span>↗</span></button></dialog>
-  <dialog id="auctionDialog" class="share-dialog"><button class="dialog-close" id="closeAuction" aria-label="Close">×</button><div class="section-kicker">AUCTION SETUP</div><h2>Start a classroom auction</h2><p>Deploy a new Sepolia auction with your wallet, or open an existing contract address.</p>
-    <section class="deploy-panel" aria-labelledby="deployHeading"><div class="section-kicker" id="deployHeading">CREATE A NEW TESTNET AUCTION</div><label class="deploy-field" for="deployDescription">RESOURCE DESCRIPTION<input id="deployDescription" type="text" maxlength="160" value="VM-001 | 4 CPU | 16 GB RAM | 100 GB storage | 2 hours"></label><div class="deploy-field-grid"><label class="deploy-field" for="deployMaxBid">BID CEILING<input id="deployMaxBid" type="number" min="0.01" max="100000" step="0.01" value="100"><small>Demo units</small></label><label class="deploy-field" for="deployCommitDuration">COMMIT WINDOW<input id="deployCommitDuration" type="number" min="60" max="3600" step="60" value="300"><small>Seconds · minimum 60</small></label><label class="deploy-field" for="deployRevealDuration">REVEAL WINDOW<input id="deployRevealDuration" type="number" min="60" max="3600" step="60" value="300"><small>Seconds · minimum 60</small></label></div><button class="primary-button" id="deployAuctionButton">Deploy with wallet <span>→</span></button><p class="dialog-help">Requires a wallet on Sepolia with test ETH for gas. The contract accepts no bid funds. Your wallet becomes the auction organizer.</p></section>
-    <div class="dialog-divider">OR OPEN AN EXISTING AUCTION</div><label class="field-label" for="auctionAddressInput">CONTRACT ADDRESS</label><input class="dialog-input" id="auctionAddressInput" spellcheck="false" placeholder="0x…"><button class="secondary-button existing-auction-button" id="saveAuction">Open auction <span>→</span></button><p class="dialog-help">Local Hardhat addresses work only while that local chain is running.</p></dialog>
+  <footer><span>© 2026 CLOUD AUCTION LAB</span><span>CLASSROOM DEMO · NO REAL MONEY</span><a href="https://github.com/Arnav2580/commit-reveal-cloud-auction" target="_blank" rel="noreferrer">Project source ↗</a></footer>
+  <div id="toastRegion" class="toast-region" aria-live="polite"></div>
 </body>
 </html>

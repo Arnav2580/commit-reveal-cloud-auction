@@ -4,6 +4,7 @@
   "private": true,
   "description": "Front-running-resistant cloud resource auction demo",
   "scripts": {
+    "start": "node server.js",
     "compile": "hardhat compile && node scripts/export-abi.js",
     "test": "hardhat test",
     "node": "hardhat node",
