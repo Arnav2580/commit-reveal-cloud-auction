@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: cloudauction-classroom-demo
+    runtime: static
+    branch: main
+    buildCommand: npm ci && npm run compile
+    staticPublishPath: ./web
+    autoDeployTrigger: commit
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin

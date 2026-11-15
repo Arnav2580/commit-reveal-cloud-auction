@@ -71,6 +71,12 @@ To serve the UI separately, use `npm run app`. The auction address can be added 
 
 Ethereum testnet transactions require public RPC availability and test ETH. Do not put an RPC provider secret in `web/` or publish a wallet private key. A QR code cannot prevent one person from using multiple wallets; use an instructor-managed enrollment process if that control is required.
 
+## Deploy the classroom UI on Render
+
+The repository includes a Render Blueprint in `render.yaml`. In Render, create a new Blueprint from `Arnav2580/commit-reveal-cloud-auction` and select the `main` branch. Render builds the contract ABI and publishes the static browser app from `web/` at a public `onrender.com` URL. The Blueprint enables automatic deploys when `main` changes.
+
+This hosts the user interface only. The committed `web/deployments.json` contains the local Hardhat demo address, which is not available on Render or to classroom participants. To run a shared public auction, deploy a fresh contract to Sepolia with a testnet-only deployer key, then publish the resulting **contract address** in `web/deployments.json` and redeploy. Keep `SEPOLIA_RPC_URL` secrets and `DEPLOYER_PRIVATE_KEY` out of the repository and static-site environment. Participants still need wallets with Sepolia test ETH for gas; bids and recovery secrets remain in each bidder's browser.
+
 ## Research paper and measured figures
 
 The formatted PDF research paper, including a market comparison graph, limitations, six analytical figures, and a complete screenshot from the local demo, is [paper/research-paper.pdf](paper/research-paper.pdf). The editable source remains in [paper/research-paper.md](paper/research-paper.md). Regenerate benchmark data and paper visuals with:
