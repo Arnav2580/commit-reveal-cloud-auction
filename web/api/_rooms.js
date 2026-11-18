@@ -85,6 +85,7 @@ function fail(res,error) {
 }
 
 async function create(req,res) {
+  if(req.method==='GET') return send(res,200,{status:'ready',message:'Room API is ready. Create a room using the organizer form.'});
   if (req.method!=='POST') { res.setHeader('Allow','POST'); return send(res,405,{error:'Method not allowed.'}); }
   try {
     const body=await parseBody(req), title=String(body.title||'').trim(), resource=String(body.resource||'').trim(), durationSeconds=Number(body.durationSeconds);
