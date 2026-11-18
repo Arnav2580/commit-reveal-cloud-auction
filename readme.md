@@ -58,7 +58,7 @@ Run the live-style classroom simulation locally with one command:
 npm start
 ```
 
-The Node service serves both the web UI and a shared room API at `http://localhost:4173`. A public hosted instance is required for people on different networks to join the same room; a local instance is suitable for development only.
+The Node service serves both the web UI and a shared local room API at `http://localhost:4173`. The deployed Vercel app uses Vercel Functions and a shared Redis store so students on different networks can join the same room. A local instance is suitable for development only.
 
 An organizer creates a room, shares its QR invite, registers the class, and opens bidding. Each attendee enters their name and class/roll ID and submits one sealed bid. The server checks bids against a private randomized ceiling per person and reveals eligible bids after the organizer closes the round. Names and class/roll IDs are visible to the organizer and are stored in the service's room file; avoid collecting sensitive personal information. The public room view does not disclose the private ceiling or opponents' bids while bidding is open. This is a classroom simulation, not a payment product or identity-verification system.
 
@@ -66,11 +66,13 @@ An organizer creates a room, shares its QR invite, registers the class, and open
 
 Every room receives a cryptographically generated hidden reference between 70 and 130 demo points. At registration, each attendee receives an independent private ceiling within ±30 points of that room reference (bounded to 40–160). Neither the center nor an attendee's ceiling is returned by the room API. The UI does not expose those values. Bids are kept from other participants until reveal; a bid above its private ceiling is marked ineligible only at finalization. This prevents a participant from probing the exact cap through repeated validation attempts.
 
-Each room permits one entry per class/roll ID (case-insensitive) and one bid per entry. The organizer token and participant token are high-entropy browser-held values. The simulation service stores room records, participant details, hidden ceilings, and bids in `data/rooms.json`; this file is ignored by Git. For production use, replace the local JSON store with a managed database, define retention/access policy, use HTTPS, add rate limits and instructor authentication, and deploy multiple-instance-safe atomic writes.
+Each room permits one entry per class/roll ID (case-insensitive) and one bid per entry. The organizer token and participant token are high-entropy browser-held values. The local simulation stores room records in `data/rooms.json`, which is ignored by Git. Vercel stores deployed rooms in Redis with atomic per-room updates and a 48-hour expiry after the last change. Names and class IDs are visible to the organizer; do not enter sensitive information.
 
-### Host the full simulation service
+### Vercel deployment and shared storage
 
-The `render.yaml` blueprint configures a Node web service that serves the UI and API from the same origin. Use a persistent mounted disk for `data/rooms.json` if room records must survive instance restarts. The free ephemeral filesystem may be cleared on restart, so it is suitable only for a short classroom demo. Vercel's static deployment serves the earlier wallet interface and cannot host this shared in-memory/file-backed room service as a static site.
+The Vercel project root is `web/`. Its Functions implement `/api/rooms` and `/api/rooms/:code/*`; Redis credentials are read from `KV_REST_API_URL` and `KV_REST_API_TOKEN`, injected by the Upstash integration. The project is configured for the Mumbai function region to stay close to the Redis store. The connected Upstash resource uses its free plan with automatic upgrades disabled. Vercel's static assets and Functions deploy together from this project root.
+
+Provisioning Upstash requires accepting its marketplace legal terms in the owner's Vercel account. Do not commit Redis credentials or copy them into client-side code. If storage is not connected, the API returns a setup error instead of pretending to create a shared room.
 
 The wallet and Sepolia flow is marked as an upcoming feature in the current UI. Smart-contract tests and the research figures describe the separate on-chain prototype and should not be interpreted as measurements of the live simulation server.
 
